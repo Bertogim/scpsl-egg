@@ -208,9 +208,13 @@ export BOX64_DYNAREC_NATIVEFLAGS=0
 # STRONGMEM=1 forces x86 TSO memory model — critical for Mono/C#.
 # ARM64 weak ordering breaks Mono threading (null deref at +0x10).
 export BOX64_DYNAREC_STRONGMEM=1
-# BIGBLOCKS=0: Mono JIT genera muchos bloques pequeños. Sin esto
-# box64 los fusiona y puede corromper registros (R14=0 en LocalAdmin).
-export BOX64_DYNAREC_BIGBLOCKS=0
+# BIGBLOCK=0 (sin S — BIGBLOCKS es typo y box64 lo ignora): Mono JIT
+# genera muchos bloques pequeños. Sin esto box64 los fusiona y puede
+# corromper registros (R14=0 en LocalAdmin).
+export BOX64_DYNAREC_BIGBLOCK=0
+# SAFEFLAGS=2: flags exactos en todos los CALL/RET — Mono vive de señales
+# y excepciones; con el default 1 un flag corrupto cuelga el proceso.
+export BOX64_DYNAREC_SAFEFLAGS=2
 
 # Start SCPDiscord in background if installed
 if [ -f ".egg/SCPDBot/scpdiscord" ]; then
@@ -225,12 +229,13 @@ if [ "$(uname -m)" = "aarch64" ]; then LAUNCH_CMD='box64 ./LocalAdmin'; fi
 # then forward normally. Prevents typed-ahead input from reaching game
 # process during Unity silent init phase.
 STDIN_GUARD="{ timeout ${STDIN_GUARD_TIMEOUT:-30} cat > /dev/null 2>&1 || true; cat; }"
-if [ $# -gt 0 ]; then
-    eval "$STDIN_GUARD" | script -qfc "$LAUNCH_CMD $1 --weak-http-security" /dev/null | tee -a "$LOG_FILE"
-else
-    eval "$STDIN_GUARD" | script -qfc "$LAUNCH_CMD --weak-http-security" /dev/null | tee -a "$LOG_FILE"
-fi
-exit $?
+PORT_ARG=""
+[ $# -gt 0 ] && PORT_ARG="$1"
+# script -e forwards LocalAdmin's exit code; PIPESTATUS[1] is script's
+# status. Plain `exit $?` would return tee's 0, making crashes look like
+# clean shutdowns and disabling the runner's restart-on-crash loop.
+eval "$STDIN_GUARD" | script -qefc "$LAUNCH_CMD $PORT_ARG --weak-http-security" /dev/null | tee -a "$LOG_FILE"
+exit "${PIPESTATUS[1]}"
 STARTEOF
 chmod +x /mnt/server/start.sh
 
