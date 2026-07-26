@@ -253,7 +253,8 @@ if [ "$ARCH" = "aarch64" ]; then
         echo "$(tput setaf 4)Downloading Ubuntu 22.04 RootFS (~1 GB)...$(tput sgr0)"
 
         wget \
-          --progress=bar:force \
+          --show-progress \
+          --progress=bar:force:noscroll \
           -O "$ROOTFS_FILE" \
           "$ROOTFS_URL"
 
@@ -286,6 +287,28 @@ EOF
         echo "$(tput setaf 2)FEX RootFS installed successfully.$(tput sgr0)"
     else
         echo "$(tput setaf 2)FEX RootFS already installed.$(tput sgr0)"
+        
+        
+        if [ ! -d "$HOME/.fex-emu/RootFS/Ubuntu_22_04" ]; then
+            echo "$(tput setaf 4)Extracting RootFS...$(tput sgr0)"
+
+            unsquashfs \
+                -d "$HOME/.fex-emu/RootFS/Ubuntu_22_04" \
+                "$HOME/.fex-emu/RootFS/Ubuntu_22_04.sqsh"
+
+            cat > "$CONFIG_FILE" <<EOF
+{
+  "Config": {
+    "RootFS": "Ubuntu_22_04"
+  }
+}
+EOF
+
+            echo "$(tput setaf 2)Extraction complete.$(tput sgr0)"
+        else
+            echo "$(tput setaf 2)RootFS already extracted.$(tput sgr0)"
+        fi
+
     fi
 fi
 
