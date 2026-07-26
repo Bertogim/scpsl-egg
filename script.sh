@@ -184,9 +184,46 @@ if [ "$ARCH" = "aarch64" ]; then
   fi
 fi
 
-echo "$(tput setaf 4)Installing FEX emu...$(tput sgr0)"
 
-export DEBIAN_FRONTEND=noninteractive
+
+
+cat > /mnt/server/start.sh << 'STARTEOF'
+#!/bin/bash
+# Server start script with daily log rotation
+LOG_DIR="./logs"
+RETENTION_DAYS="${LOG_RETENTION_DAYS:-7}"
+DATE_DIR="$(date +%Y-%m-%d)"
+
+mkdir -p "$LOG_DIR/$DATE_DIR"
+LOG_FILE="$LOG_DIR/$DATE_DIR/server.log"
+echo "Logging to $LOG_FILE (retention: $RETENTION_DAYS days)"
+
+# Cleanup old logs
+find "$LOG_DIR" -maxdepth 1 -type d -name "????-??-??" -mtime +"$RETENTION_DAYS" -exec rm -rf {} + 2>/dev/null
+
+# Box64 workarounds for ARM64 — disable dynarec Native Flags optimization
+# (causes corrupted args in sysconf calls on Neoverse-N1)
+ulimit -s unlimited 2>/dev/null
+ulimit -v unlimited 2>/dev/null
+export BOX64_DYNAREC_NATIVEFLAGS=0
+# STRONGMEM=1 forces x86 TSO memory model — critical for Mono/C#.
+# ARM64 weak ordering breaks Mono threading (null deref at +0x10).
+export BOX64_DYNAREC_STRONGMEM=1
+# BIGBLOCK=0 (sin S — BIGBLOCKS es typo y box64 lo ignora): Mono JIT
+# genera muchos bloques pequeños. Sin esto box64 los fusiona y puede
+# corromper registros (R14=0 en LocalAdmin).
+export BOX64_DYNAREC_BIGBLOCK=0
+# SAFEFLAGS=2: flags exactos en todos los CALL/RET — Mono vive de señales
+# y excepciones; con el default 1 un flag corrupto cuelga el proceso.
+export BOX64_DYNAREC_SAFEFLAGS=2
+export BOX64_LD_LIBRARY_PATH=/usr/lib/mono/4.5:/usr/lib/x86_64-linux-gnu
+
+# Start SCPDiscord in background if installed
+if [ -f ".egg/SCPDBot/scpdiscord" ]; then
+    ".egg/SCPDBot/scpdiscord" --config ".egg/SCPDBot/config.yml" &
+fi
+
+echo "$(tput setaf 4)Installing FEX emu...$(tput sgr0)"
 
 if [ "$ARCH" = "aarch64" ]; then
     ROOTFS_DIR="/home/container/.config/fex-emu/RootFS"
@@ -252,44 +289,6 @@ EOF
     fi
 fi
 
-rm -rf /var/lib/apt/lists/*
-
-
-cat > /mnt/server/start.sh << 'STARTEOF'
-#!/bin/bash
-# Server start script with daily log rotation
-LOG_DIR="./logs"
-RETENTION_DAYS="${LOG_RETENTION_DAYS:-7}"
-DATE_DIR="$(date +%Y-%m-%d)"
-
-mkdir -p "$LOG_DIR/$DATE_DIR"
-LOG_FILE="$LOG_DIR/$DATE_DIR/server.log"
-echo "Logging to $LOG_FILE (retention: $RETENTION_DAYS days)"
-
-# Cleanup old logs
-find "$LOG_DIR" -maxdepth 1 -type d -name "????-??-??" -mtime +"$RETENTION_DAYS" -exec rm -rf {} + 2>/dev/null
-
-# Box64 workarounds for ARM64 — disable dynarec Native Flags optimization
-# (causes corrupted args in sysconf calls on Neoverse-N1)
-ulimit -s unlimited 2>/dev/null
-ulimit -v unlimited 2>/dev/null
-export BOX64_DYNAREC_NATIVEFLAGS=0
-# STRONGMEM=1 forces x86 TSO memory model — critical for Mono/C#.
-# ARM64 weak ordering breaks Mono threading (null deref at +0x10).
-export BOX64_DYNAREC_STRONGMEM=1
-# BIGBLOCK=0 (sin S — BIGBLOCKS es typo y box64 lo ignora): Mono JIT
-# genera muchos bloques pequeños. Sin esto box64 los fusiona y puede
-# corromper registros (R14=0 en LocalAdmin).
-export BOX64_DYNAREC_BIGBLOCK=0
-# SAFEFLAGS=2: flags exactos en todos los CALL/RET — Mono vive de señales
-# y excepciones; con el default 1 un flag corrupto cuelga el proceso.
-export BOX64_DYNAREC_SAFEFLAGS=2
-export BOX64_LD_LIBRARY_PATH=/usr/lib/mono/4.5:/usr/lib/x86_64-linux-gnu
-
-# Start SCPDiscord in background if installed
-if [ -f ".egg/SCPDBot/scpdiscord" ]; then
-    ".egg/SCPDBot/scpdiscord" --config ".egg/SCPDBot/config.yml" &
-fi
 
 LAUNCH_CMD='./LocalAdmin'
 if [ "$(uname -m)" = "aarch64" ]; then
