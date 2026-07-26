@@ -188,7 +188,6 @@ fi
 echo "$(tput setaf 4)Installing FEX emu...$(tput sgr0)"
 
 export DEBIAN_FRONTEND=noninteractive
-
 if [ "$ARCH" = "aarch64" ]; then
     ROOTFS_DIR="/home/container/.fex-emu/RootFS"
     ROOTFS_FILE="$ROOTFS_DIR/Ubuntu_22_04.sqsh"
@@ -198,6 +197,9 @@ if [ "$ARCH" = "aarch64" ]; then
 
     if [ ! -f "$ROOTFS_FILE" ]; then
         mkdir -p "$ROOTFS_DIR"
+        mkdir -p "$(dirname "$CONFIG_FILE")"
+
+        echo "$(tput setaf 4)Obtaining FEX RootFS URL...$(tput sgr0)"
 
         ROOTFS_URL=$(curl -fsSL https://rootfs.fex-emu.gg/RootFS_links.json | \
         jq -r '.v1 | to_entries[] |
@@ -207,12 +209,19 @@ if [ "$ARCH" = "aarch64" ]; then
         .value.URL')
 
         if [ -z "$ROOTFS_URL" ] || [ "$ROOTFS_URL" = "null" ]; then
-            echo "Failed to obtain FEX RootFS URL."
+            echo "$(tput setaf 1)Failed to obtain FEX RootFS URL.$(tput sgr0)"
             exit 1
         fi
 
-        echo "Downloading RootFS..."
-        curl -L --fail -o "$ROOTFS_FILE" "$ROOTFS_URL"
+        echo "$(tput setaf 4)Downloading Ubuntu 22.04 RootFS (~1 GB)...$(tput sgr0)"
+
+        curl -L \
+            --progress-bar \
+            --fail \
+            -o "$ROOTFS_FILE" \
+            "$ROOTFS_URL"
+
+        echo "$(tput setaf 2)Download complete.$(tput sgr0)"
 
         cat > "$CONFIG_FILE" <<EOF
 {
