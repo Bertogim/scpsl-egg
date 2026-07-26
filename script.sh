@@ -188,8 +188,46 @@ fi
 echo "$(tput setaf 4)Installing FEX emu...$(tput sgr0)"
 
 export DEBIAN_FRONTEND=noninteractive
-apt update
-apt install -y fex-emu fex-emu-rootfs
+
+if [ "$ARCH" = "aarch64" ]; then
+    ROOTFS_DIR="/home/container/.fex-emu/RootFS"
+    ROOTFS_FILE="$ROOTFS_DIR/Ubuntu_22_04.sqsh"
+    CONFIG_FILE="/home/container/.fex-emu/Config.json"
+
+    echo "$(tput setaf 4)Installing FEX RootFS...$(tput sgr0)"
+
+    if [ ! -f "$ROOTFS_FILE" ]; then
+        mkdir -p "$ROOTFS_DIR"
+
+        ROOTFS_URL=$(curl -fsSL https://rootfs.fex-emu.gg/RootFS_links.json | \
+        jq -r '.v1 | to_entries[] |
+        select(.value.DistroMatch=="ubuntu" and
+               .value.DistroVersion=="22.04" and
+               .value.Type=="squashfs") |
+        .value.URL')
+
+        if [ -z "$ROOTFS_URL" ] || [ "$ROOTFS_URL" = "null" ]; then
+            echo "Failed to obtain FEX RootFS URL."
+            exit 1
+        fi
+
+        echo "Downloading RootFS..."
+        curl -L --fail -o "$ROOTFS_FILE" "$ROOTFS_URL"
+
+        cat > "$CONFIG_FILE" <<EOF
+{
+  "Config": {
+    "RootFS": "Ubuntu_22_04.sqsh"
+  }
+}
+EOF
+
+        ls -lh "$ROOTFS_DIR"
+        echo "$(tput setaf 2)FEX RootFS installed successfully.$(tput sgr0)"
+    else
+        echo "$(tput setaf 2)FEX RootFS already installed.$(tput sgr0)"
+    fi
+fi
 
 rm -rf /var/lib/apt/lists/*
 
