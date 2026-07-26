@@ -1,6 +1,8 @@
 
 #!/bin/bash
 # Server start script with daily log rotation
+echo "Script Started"
+
 LOG_DIR="./logs"
 RETENTION_DAYS="${LOG_RETENTION_DAYS:-7}"
 DATE_DIR="$(date +%Y-%m-%d)"
@@ -22,9 +24,10 @@ if [ -f ".egg/SCPDBot/scpdiscord" ]; then
     ".egg/SCPDBot/scpdiscord" --config ".egg/SCPDBot/config.yml" &
 fi
 
-echo "$(tput setaf 4)Installing FEX emu...$(tput sgr0)"
 
 if [ "$ARCH" = "aarch64" ]; then
+    echo "$(tput setaf 4)Installing FEX emu...$(tput sgr0)"
+
     ROOTFS_DIR="/home/container/.config/fex-emu/RootFS"
     ROOTFS_FILE="$ROOTFS_DIR/Ubuntu_22_04.sqsh"
     CONFIG_FILE="/home/container/.config/fex-emu/Config.json"
