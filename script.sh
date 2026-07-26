@@ -185,6 +185,16 @@ if [ "$ARCH" = "aarch64" ]; then
   fi
 fi
 
+echo "$(tput setaf 4)Installing Mono runtime...$(tput sgr0)"
+
+export DEBIAN_FRONTEND=noninteractive
+apt-get update
+apt-get install -y --no-install-recommends \
+    mono-runtime \
+    libmono-posix4.0-cil
+
+rm -rf /var/lib/apt/lists/*
+
 
 cat > /mnt/server/start.sh << 'STARTEOF'
 #!/bin/bash
@@ -215,6 +225,7 @@ export BOX64_DYNAREC_BIGBLOCK=0
 # SAFEFLAGS=2: flags exactos en todos los CALL/RET — Mono vive de señales
 # y excepciones; con el default 1 un flag corrupto cuelga el proceso.
 export BOX64_DYNAREC_SAFEFLAGS=2
+export BOX64_LD_LIBRARY_PATH=/usr/lib/mono/4.5:/usr/lib/x86_64-linux-gnu
 
 # Start SCPDiscord in background if installed
 if [ -f ".egg/SCPDBot/scpdiscord" ]; then
