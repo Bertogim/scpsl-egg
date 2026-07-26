@@ -24,7 +24,7 @@ if [ -f ".egg/SCPDBot/scpdiscord" ]; then
     ".egg/SCPDBot/scpdiscord" --config ".egg/SCPDBot/config.yml" &
 fi
 
-
+ARCH=$(uname -m)
 if [ "$ARCH" = "aarch64" ]; then
     echo "$(tput setaf 4)Installing FEX emu...$(tput sgr0)"
 
