@@ -185,13 +185,11 @@ if [ "$ARCH" = "aarch64" ]; then
   fi
 fi
 
-echo "$(tput setaf 4)Installing Mono runtime...$(tput sgr0)"
+echo "$(tput setaf 4)Installing FEX emu...$(tput sgr0)"
 
 export DEBIAN_FRONTEND=noninteractive
-dpkg --add-architecture amd64
 apt update
-apt install -y mono-runtime:amd64 libmono-posix4.0-cil:amd64
-apt install -y mono-complete:amd64
+apt install -y fex-emu fex-emu-rootfs
 
 rm -rf /var/lib/apt/lists/*
 
