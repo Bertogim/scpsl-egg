@@ -205,18 +205,6 @@ find "$LOG_DIR" -maxdepth 1 -type d -name "????-??-??" -mtime +"$RETENTION_DAYS"
 # (causes corrupted args in sysconf calls on Neoverse-N1)
 ulimit -s unlimited 2>/dev/null
 ulimit -v unlimited 2>/dev/null
-export BOX64_DYNAREC_NATIVEFLAGS=0
-# STRONGMEM=1 forces x86 TSO memory model — critical for Mono/C#.
-# ARM64 weak ordering breaks Mono threading (null deref at +0x10).
-export BOX64_DYNAREC_STRONGMEM=1
-# BIGBLOCK=0 (sin S — BIGBLOCKS es typo y box64 lo ignora): Mono JIT
-# genera muchos bloques pequeños. Sin esto box64 los fusiona y puede
-# corromper registros (R14=0 en LocalAdmin).
-export BOX64_DYNAREC_BIGBLOCK=0
-# SAFEFLAGS=2: flags exactos en todos los CALL/RET — Mono vive de señales
-# y excepciones; con el default 1 un flag corrupto cuelga el proceso.
-export BOX64_DYNAREC_SAFEFLAGS=2
-export BOX64_LD_LIBRARY_PATH=/usr/lib/mono/4.5:/usr/lib/x86_64-linux-gnu
 
 # Start SCPDiscord in background if installed
 if [ -f ".egg/SCPDBot/scpdiscord" ]; then
@@ -289,12 +277,12 @@ EOF
         echo "$(tput setaf 2)FEX RootFS already installed.$(tput sgr0)"
         
         
-        if [ ! -d "$HOME/.fex-emu/RootFS/Ubuntu_22_04" ]; then
+        if [ ! -d "$HOME/.config/.fex-emu/RootFS/Ubuntu_22_04" ]; then
             echo "$(tput setaf 4)Extracting RootFS...$(tput sgr0)"
 
             unsquashfs \
-                -d "$HOME/.fex-emu/RootFS/Ubuntu_22_04" \
-                "$HOME/.fex-emu/RootFS/Ubuntu_22_04.sqsh"
+                -d "$HOME/.config/.fex-emu/RootFS/Ubuntu_22_04" \
+                "$HOME/.config/.fex-emu/RootFS/Ubuntu_22_04.sqsh"
 
             cat > "$CONFIG_FILE" <<EOF
 {
