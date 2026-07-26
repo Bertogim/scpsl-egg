@@ -215,11 +215,10 @@ if [ "$ARCH" = "aarch64" ]; then
 
         echo "$(tput setaf 4)Downloading Ubuntu 22.04 RootFS (~1 GB)...$(tput sgr0)"
 
-        curl -L \
-            --progress-bar \
-            --fail \
-            -o "$ROOTFS_FILE" \
-            "$ROOTFS_URL"
+        wget \
+          --progress=dot:giga \
+          -O "$ROOTFS_FILE" \
+          "$ROOTFS_URL"
 
         echo "$(tput setaf 2)Download complete.$(tput sgr0)"
 
