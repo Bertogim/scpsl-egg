@@ -277,12 +277,12 @@ EOF
         echo "$(tput setaf 2)FEX RootFS already installed.$(tput sgr0)"
         
         
-        if [ ! -d "$HOME/.config/.fex-emu/RootFS/Ubuntu_22_04" ]; then
+        if [ ! -d "$HOME/.config/fex-emu/RootFS/Ubuntu_22_04" ]; then
             echo "$(tput setaf 4)Extracting RootFS...$(tput sgr0)"
 
             unsquashfs \
-                -d "$HOME/.config/.fex-emu/RootFS/Ubuntu_22_04" \
-                "$HOME/.config/.fex-emu/RootFS/Ubuntu_22_04.sqsh"
+                -d "$HOME/.config/fex-emu/RootFS/Ubuntu_22_04" \
+                "$HOME/.config/fex-emu/RootFS/Ubuntu_22_04.sqsh"
 
             cat > "$CONFIG_FILE" <<EOF
 {
