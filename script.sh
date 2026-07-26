@@ -220,6 +220,21 @@ if [ "$ARCH" = "aarch64" ]; then
           -O "$ROOTFS_FILE" \
           "$ROOTFS_URL"
 
+
+        RET=$?
+        echo "wget exit=$RET"
+
+        sync
+
+        echo "After download:"
+        ls -lah "$ROOTFS_DIR"
+
+        if [ -f "$ROOTFS_FILE" ]; then
+            stat "$ROOTFS_FILE"
+        else
+            echo "ERROR: $ROOTFS_FILE does not exist"
+        fi
+
         echo "$(tput setaf 2)Download complete.$(tput sgr0)"
 
         cat > "$CONFIG_FILE" <<EOF
