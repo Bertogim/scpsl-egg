@@ -188,10 +188,10 @@ fi
 echo "$(tput setaf 4)Installing Mono runtime...$(tput sgr0)"
 
 export DEBIAN_FRONTEND=noninteractive
-apt-get update
-apt-get install -y --no-install-recommends \
-    mono-runtime \
-    libmono-posix4.0-cil
+dpkg --add-architecture amd64
+apt update
+apt install -y mono-runtime:amd64 libmono-posix4.0-cil:amd64
+apt install -y mono-complete:amd64
 
 rm -rf /var/lib/apt/lists/*
 
