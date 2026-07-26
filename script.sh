@@ -190,19 +190,67 @@ echo "$(tput setaf 4)Installing FEX emu...$(tput sgr0)"
 export DEBIAN_FRONTEND=noninteractive
 
 if [ "$ARCH" = "aarch64" ]; then
+    ROOTFS_DIR="/home/container/.config/fex-emu/RootFS"
+    ROOTFS_FILE="$ROOTFS_DIR/Ubuntu_22_04.sqsh"
+    CONFIG_FILE="/home/container/.config/fex-emu/Config.json"
+
     echo "$(tput setaf 4)Installing FEX RootFS...$(tput sgr0)"
 
-    export HOME=/home/container
+    if [ ! -f "$ROOTFS_FILE" ]; then
+        mkdir -p "$ROOTFS_DIR"
+        mkdir -p "$(dirname "$CONFIG_FILE")"
 
-    mkdir -p "$HOME"
+        echo "$(tput setaf 4)Obtaining FEX RootFS URL...$(tput sgr0)"
 
-    FEXRootFSFetcher \
-        --assume-yes \
-        --distro-name Ubuntu \
-        --distro-version 22.04 \
-        --as-is
+        ROOTFS_URL=$(curl -fsSL https://rootfs.fex-emu.gg/RootFS_links.json | \
+        jq -r '.v1 | to_entries[] |
+        select(.value.DistroMatch=="ubuntu" and
+               .value.DistroVersion=="22.04" and
+               .value.Type=="squashfs") |
+        .value.URL')
 
-    echo "$(tput setaf 2)FEX RootFS installed.$(tput sgr0)"
+        if [ -z "$ROOTFS_URL" ] || [ "$ROOTFS_URL" = "null" ]; then
+            echo "$(tput setaf 1)Failed to obtain FEX RootFS URL.$(tput sgr0)"
+            exit 1
+        fi
+
+        echo "$(tput setaf 4)Downloading Ubuntu 22.04 RootFS (~1 GB)...$(tput sgr0)"
+
+        wget \
+          --progress=dot:giga \
+          -O "$ROOTFS_FILE" \
+          "$ROOTFS_URL"
+
+
+        RET=$?
+        echo "wget exit=$RET"
+
+        sync
+
+        echo "After download:"
+        ls -lah "$ROOTFS_DIR"
+
+        if [ -f "$ROOTFS_FILE" ]; then
+            stat "$ROOTFS_FILE"
+        else
+            echo "ERROR: $ROOTFS_FILE does not exist"
+        fi
+
+        echo "$(tput setaf 2)Download complete.$(tput sgr0)"
+
+        cat > "$CONFIG_FILE" <<EOF
+{
+  "Config": {
+    "RootFS": "Ubuntu_22_04.sqsh"
+  }
+}
+EOF
+
+        ls -lh "$ROOTFS_DIR"
+        echo "$(tput setaf 2)FEX RootFS installed successfully.$(tput sgr0)"
+    else
+        echo "$(tput setaf 2)FEX RootFS already installed.$(tput sgr0)"
+    fi
 fi
 
 rm -rf /var/lib/apt/lists/*
