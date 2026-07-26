@@ -45,10 +45,9 @@ else
     Latest: $(tput setaf 2)${latestVersion}
 
   $(tput setaf 3)Please update to the latest version found here: https://github.com/EsserGaming/scpsl-egg/releases/latest
-$(tput setaf 4)Installation will start in 3 seconds...
+$(tput setaf 4)Installation will start now...
 
   "
-  sleep 3
 fi
 
 # Download SteamDepotDownloader and install it (architecture-aware).
@@ -217,7 +216,7 @@ if [ "$ARCH" = "aarch64" ]; then
         echo "$(tput setaf 4)Downloading Ubuntu 22.04 RootFS (~1 GB)...$(tput sgr0)"
 
         wget \
-          --progress=dot:giga \
+          --progress=bar:force \
           -O "$ROOTFS_FILE" \
           "$ROOTFS_URL"
 
