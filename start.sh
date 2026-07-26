@@ -114,6 +114,15 @@ EOF
     fi
 fi
 
+echo "==== FEX ===="
+which FEXInterpreter
+FEXInterpreter --version || true
+
+echo "==== RootFS ===="
+cat ~/.config/fex-emu/Config.json
+
+echo "==== LocalAdmin ===="
+file ./LocalAdmin
 
 LAUNCH_CMD='./LocalAdmin'
 if [ "$(uname -m)" = "aarch64" ]; then
