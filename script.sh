@@ -174,14 +174,14 @@ else
 fi
 
 
-# For ARM64: wrap SCPDiscord with box64 (daemon, not exec'd by another emulated process)
+# For ARM64: wrap SCPDiscord with FEX
 if [ "$ARCH" = "aarch64" ]; then
-  echo "$(tput setaf 4)Setting up Box64 SCPDiscord wrapper...$(tput sgr0)"
+  echo "$(tput setaf 4)Setting up FEX SCPDiscord wrapper...$(tput sgr0)"
   if [ -f "/mnt/server/.egg/SCPDBot/scpdiscord" ]; then
     mv "/mnt/server/.egg/SCPDBot/scpdiscord" "/mnt/server/.egg/SCPDBot/scpdiscord.bin"
-    printf '#!/bin/bash\nDIR="$(cd "$(dirname "$0")" && pwd)"\nexec box64 "$DIR/scpdiscord.bin" "$@"\n' > "/mnt/server/.egg/SCPDBot/scpdiscord"
+    printf '#!/bin/bash\nDIR="$(cd "$(dirname "$0")" && pwd)"\nexec FEXInterpreter "$DIR/scpdiscord.bin" "$@"\n' > "/mnt/server/.egg/SCPDBot/scpdiscord"
     chmod +x "/mnt/server/.egg/SCPDBot/scpdiscord"
-    echo "  Wrapped .egg/SCPDBot/scpdiscord with Box64"
+    echo "  Wrapped .egg/SCPDBot/scpdiscord with FEX"
   fi
 fi
 
@@ -233,7 +233,9 @@ if [ -f ".egg/SCPDBot/scpdiscord" ]; then
 fi
 
 LAUNCH_CMD='./LocalAdmin'
-if [ "$(uname -m)" = "aarch64" ]; then LAUNCH_CMD='box64 ./LocalAdmin'; fi
+if [ "$(uname -m)" = "aarch64" ]; then
+    LAUNCH_CMD='FEXInterpreter ./LocalAdmin'
+fi
 # Use script(1) to create a PTY so LocalAdmin outputs line-buffered + ANSI colors
 # (Without PTY, pipe makes stdout fully-buffered and strips color codes)
 # stdin guard: discard keystrokes during first 30s of init via timeout,
